@@ -1,0 +1,23 @@
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
+  }
+
+  body {
+    margin: 0;
+    @apply bg-slate-100 text-slate-950 antialiased;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+
+  button,
+  input {
+    @apply outline-none;
+  }
+}
