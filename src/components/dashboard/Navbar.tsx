@@ -1,39 +1,51 @@
+import { HiOutlineLogout } from "react-icons/hi";
 import type { StudentProfile } from "@/types/dashboard";
 
 type NavbarProps = {
   profile: StudentProfile;
+  onLogout?: () => void;
 };
 
-export function Navbar({ profile }: NavbarProps) {
+export function Navbar({ profile, onLogout }: NavbarProps) {
   return (
-    <header className="border-b border-slate-200 px-4 py-5 sm:px-6 lg:px-7">
+    <header className="border-b border-slate-200 bg-white px-4 py-5 sm:px-6 lg:px-7">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div>
-          <p className="text-sm text-slate-500">Campus Event Management Portal</p>
-          <h1 className="text-4xl font-semibold tracking-tight text-slate-950">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+            Campus Event Management Portal
+          </p>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
             Student Dashboard
           </h1>
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex h-14 min-w-[280px] items-center rounded-[22px] border border-slate-200 bg-slate-50 px-4 text-sm text-slate-400 sm:min-w-[360px] xl:min-w-[440px]">
-            Search events by name, category, location...
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex h-12 min-w-[240px] items-center rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-400 sm:min-w-[320px]">
+            Search events, workshops, categories...
           </div>
-          <button
-            className="h-14 rounded-[22px] bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_16px_30px_-18px_rgba(2,6,23,0.95)]"
-            type="button"
-          >
-            Notifications
-          </button>
-          <div className="flex items-center gap-3 rounded-[22px] border border-slate-200 bg-white px-3 py-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-sm font-semibold text-white">
-              {profile.avatarFallback}
+
+          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-950 text-xs font-bold text-white">
+              {profile.avatarFallback || "ST"}
             </div>
             <div className="hidden sm:block">
-              <p className="text-sm font-medium text-slate-900">{profile.name}</p>
-              <p className="text-xs text-slate-500">{profile.role}</p>
+              <p className="text-xs font-semibold text-slate-900">{profile.name}</p>
+              <p className="text-[10px] font-medium text-slate-500">{profile.role}</p>
             </div>
           </div>
+
+          {/* Prominent Back to Login / Sign Out Button */}
+          {onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="flex h-12 items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-xs font-semibold text-slate-700 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+              title="Sign out and return to Login page"
+            >
+              <HiOutlineLogout className="text-base" />
+              <span>Back to Login</span>
+            </button>
+          )}
         </div>
       </div>
     </header>

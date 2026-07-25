@@ -1,24 +1,72 @@
-# Logs
-logs
+# Logs & npm cache directories
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+.npm/
+.npm-cache/
+npm-cache/
+.yarn/
+.yarn-cache/
+.cache/
+.eslintcache
+.stylelintcache
+*.tsbuildinfo
 
-node_modules
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Dependency directories
+node_modules/
+jspm_packages/
+.pnpm-store/
+
+# Snowpack server cache
+.snowpack/
+
+# Vite / Build outputs
 dist
 dist-ssr
 *.local
+.vite/
+build/
+out/
 
-# Editor directories and files
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# OS Metadata
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE Files
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-*.sw?
+*.swp
+*.swo
+
+# Backend untracked files in root workspace
+backend/venv/
+backend/.venv/
+backend/__pycache__/
+backend/*/__pycache__/
+backend/*/*/__pycache__/
+backend/uploads/*
+!backend/uploads/.gitkeep

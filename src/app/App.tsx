@@ -1,20 +1,50 @@
 import { useState } from "react";
-
-import { adminUser, currentUser } from "@/data/auth";
-import { LoginPage } from "@/pages/auth";
+import { LoginPage, SignupPage } from "@/pages/auth";
 import { AdminDashboardPage } from "@/pages/admin-dashboard";
 import { StudentDashboardPage } from "@/pages/student-dashboard";
+import { getStoredUser, logoutUserApi, type ApiAuthResponse } from "@/lib/api";
 
-type AppRoute = "login" | "student-dashboard" | "admin-dashboard";
+type AppRoute = "login" | "signup" | "student-dashboard" | "admin-dashboard";
 
 export function App() {
-  const [route, setRoute] = useState<AppRoute>("login");
+  const [currentUser, setCurrentUser] = useState<ApiAuthResponse | null>(() => getStoredUser());
+  const [route, setRoute] = useState<AppRoute>(() => {
+    const user = getStoredUser();
+    if (user) {
+      return user.role === "ADMIN" ? "admin-dashboard" : "student-dashboard";
+    }
+    return "login";
+  });
+
+  const handleAuthSuccess = (user: ApiAuthResponse) => {
+    setCurrentUser(user);
+    if (user.role === "ADMIN") {
+      setRoute("admin-dashboard");
+    } else {
+      setRoute("student-dashboard");
+    }
+  };
+
+  const handleLogout = () => {
+    logoutUserApi();
+    setCurrentUser(null);
+    setRoute("login");
+  };
+
+  if (route === "signup") {
+    return (
+      <SignupPage
+        onSuccess={handleAuthSuccess}
+        onNavigateToLogin={() => setRoute("login")}
+      />
+    );
+  }
 
   if (route === "login") {
     return (
       <LoginPage
-        onSelectAdmin={() => setRoute("admin-dashboard")}
-        onSelectStudent={() => setRoute("student-dashboard")}
+        onSuccess={handleAuthSuccess}
+        onNavigateToSignup={() => setRoute("signup")}
       />
     );
   }
@@ -22,16 +52,16 @@ export function App() {
   if (route === "student-dashboard") {
     return (
       <StudentDashboardPage
-        userName={currentUser.name}
-        onLogout={() => setRoute("login")}
+        userName={currentUser?.full_name || "Aby Ponnachan"}
+        onLogout={handleLogout}
       />
     );
   }
 
   return (
     <AdminDashboardPage
-      userName={adminUser.name}
-      onLogout={() => setRoute("login")}
+      userName={currentUser?.full_name || "Campus Admin"}
+      onLogout={handleLogout}
     />
   );
 }

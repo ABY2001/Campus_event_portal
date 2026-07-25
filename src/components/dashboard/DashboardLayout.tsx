@@ -39,7 +39,7 @@ export function DashboardLayout({
         <Sidebar onLogout={onLogout} />
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <Navbar profile={profile} />
+          <Navbar onLogout={onLogout} profile={profile} />
 
           <main className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-7">
             <div className="space-y-6">

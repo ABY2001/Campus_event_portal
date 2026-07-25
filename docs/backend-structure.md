@@ -1,0 +1,82 @@
+# Backend Structure
+
+Recommended backend scaffold for the Campus Event Portal:
+
+```text
+backend/
+  .env.example
+  package.json
+  README.md
+  tsconfig.json
+  src/
+    app.ts
+    server.ts
+    config/
+      env.ts
+      index.ts
+    constants/
+      event-categories.ts
+      index.ts
+      registration-status.ts
+      roles.ts
+    controllers/
+      admin.controller.ts
+      announcement.controller.ts
+      auth.controller.ts
+      event.controller.ts
+      index.ts
+      registration.controller.ts
+      user.controller.ts
+    data/
+      mock/
+        admin.ts
+        announcements.ts
+        events.ts
+        index.ts
+        registrations.ts
+        users.ts
+    middleware/
+      error-handler.ts
+      index.ts
+      not-found.ts
+    models/
+      announcement.model.ts
+      event.model.ts
+      index.ts
+      registration.model.ts
+      user.model.ts
+    repositories/
+      admin.repository.ts
+      announcement.repository.ts
+      event.repository.ts
+      index.ts
+      registration.repository.ts
+      user.repository.ts
+    routes/
+      admin.routes.ts
+      announcement.routes.ts
+      auth.routes.ts
+      event.routes.ts
+      index.ts
+      registration.routes.ts
+      user.routes.ts
+    schemas/
+      auth.schema.ts
+      event.schema.ts
+      index.ts
+      registration.schema.ts
+    services/
+      admin.service.ts
+      announcement.service.ts
+      event.service.ts
+      index.ts
+      registration.service.ts
+      user.service.ts
+    types/
+      api-response.ts
+      express.d.ts
+      index.ts
+    utils/
+      async-handler.ts
+      index.ts
+```
