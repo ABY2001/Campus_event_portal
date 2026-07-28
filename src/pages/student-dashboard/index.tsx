@@ -23,9 +23,10 @@ type StudentDashboardPageProps = {
 
 export function StudentDashboardPage(props: StudentDashboardPageProps) {
   // Live Events & Registrations State
-  const [events, setEvents] = useState<ApiEvent[]>(() => getSharedEvents());
+  const [rawEvents, setRawEvents] = useState<ApiEvent[]>(() => getSharedEvents());
   const [registrations, setRegistrations] = useState<ApiRegistration[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Status & Feedback
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
@@ -45,29 +46,17 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
   const loadEventsAndRegistrations = async () => {
     try {
       const categoryParam = selectedCategory === "All" ? undefined : selectedCategory;
-      const res = await getEventsApi({ category: categoryParam });
+      const res = await getEventsApi({ search: searchQuery, category: categoryParam });
       if (res.items && res.items.length > 0) {
-        setEvents(res.items);
+        setRawEvents(res.items);
         saveSharedEvents(res.items);
       } else {
         const stored = getSharedEvents();
-        const filtered =
-          selectedCategory === "All"
-            ? stored
-            : stored.filter(
-                (e) => e.category.toLowerCase() === selectedCategory.toLowerCase()
-              );
-        setEvents(filtered);
+        setRawEvents(stored);
       }
     } catch {
       const stored = getSharedEvents();
-      const filtered =
-        selectedCategory === "All"
-          ? stored
-          : stored.filter(
-              (e) => e.category.toLowerCase() === selectedCategory.toLowerCase()
-            );
-      setEvents(filtered);
+      setRawEvents(stored);
     }
 
     try {
@@ -80,18 +69,37 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
 
   useEffect(() => {
     loadEventsAndRegistrations();
-  }, [selectedCategory]);
+  }, [selectedCategory, searchQuery]);
+
+  // Real-time client-side search & category filtering
+  const displayedEvents = rawEvents.filter((ev) => {
+    // Category match
+    const categoryMatches =
+      selectedCategory === "All" ||
+      ev.category.toLowerCase() === selectedCategory.toLowerCase();
+
+    // Search query match across title, description, location, and category
+    const query = searchQuery.trim().toLowerCase();
+    const searchMatches =
+      !query ||
+      ev.title.toLowerCase().includes(query) ||
+      ev.description.toLowerCase().includes(query) ||
+      ev.location.toLowerCase().includes(query) ||
+      ev.category.toLowerCase().includes(query);
+
+    return categoryMatches && searchMatches;
+  });
 
   // Handle Event Registration
   const handleRegisterEvent = async (eventId: string) => {
     setActionLoadingEventId(eventId);
-    const targetEvent = events.find((e) => e.id === eventId);
+    const targetEvent = rawEvents.find((e) => e.id === eventId);
     const title = targetEvent?.title || "Event";
 
     try {
       const newReg = await registerForEventApi(eventId);
       setRegistrations((prev) => [newReg, ...prev.filter((r) => r.event_id !== eventId)]);
-      setEvents((prev) => {
+      setRawEvents((prev) => {
         const updated = prev.map((ev) =>
           ev.id === eventId
             ? {
@@ -116,7 +124,7 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
         event: targetEvent,
       };
       setRegistrations((prev) => [mockReg, ...prev.filter((r) => r.event_id !== eventId)]);
-      setEvents((prev) => {
+      setRawEvents((prev) => {
         const updated = prev.map((ev) =>
           ev.id === eventId
             ? {
@@ -138,7 +146,7 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
   // Handle Cancel Registration
   const handleCancelRegistration = async (eventId: string) => {
     setActionLoadingEventId(eventId);
-    const targetEvent = events.find((e) => e.id === eventId);
+    const targetEvent = rawEvents.find((e) => e.id === eventId);
     const title = targetEvent?.title || "Event";
 
     try {
@@ -148,7 +156,7 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
     }
 
     setRegistrations((prev) => prev.filter((r) => r.event_id !== eventId));
-    setEvents((prev) => {
+    setRawEvents((prev) => {
       const updated = prev.map((ev) =>
         ev.id === eventId
           ? {
@@ -169,7 +177,7 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
   const activeRegistrationsCount = registrations.filter((r) => r.status === "REGISTERED").length;
   const liveStats = [
     { id: "stat-1", label: "My Registrations", value: activeRegistrationsCount },
-    { id: "stat-2", label: "Available Events", value: events.length },
+    { id: "stat-2", label: "Available Events", value: displayedEvents.length },
     { id: "stat-3", label: "Campus Department", value: "Computer Science" },
   ];
 
@@ -179,7 +187,9 @@ export function StudentDashboardPage(props: StudentDashboardPageProps) {
       categories={categoryFilters}
       selectedCategory={selectedCategory}
       onSelectCategory={setSelectedCategory}
-      events={events}
+      searchQuery={searchQuery}
+      onSearchChange={setSearchQuery}
+      events={displayedEvents}
       onLogout={props.onLogout}
       profile={{
         ...studentProfile,

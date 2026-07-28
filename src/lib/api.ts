@@ -77,46 +77,21 @@ export function getSharedEvents(): ApiEvent[] {
     const data = localStorage.getItem("campus_shared_events");
     if (data) {
       const parsed = JSON.parse(data);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (Array.isArray(parsed)) {
+        // Filter out Tech Talk and Campus Cultural Music Fest
+        const filtered = parsed.filter(
+          (e: ApiEvent) =>
+            !e.title.toLowerCase().includes("tech talk") &&
+            !e.title.toLowerCase().includes("cultural music fest") &&
+            !e.title.toLowerCase().includes("cultural fest")
+        );
+        if (filtered.length > 0) return filtered;
+      }
     }
   } catch {}
 
-  const defaultEvents: ApiEvent[] = [
-    {
-      id: "demo-1",
-      title: "Tech Talk 2026",
-      description: "Annual university tech conference featuring AI and web development.",
-      category: "Workshop",
-      location: "Auditorium A",
-      start_time: new Date(Date.now() + 86400000 * 3).toISOString(),
-      end_time: new Date(Date.now() + 86400000 * 3 + 7200000).toISOString(),
-      registration_deadline: new Date(Date.now() + 86400000 * 2).toISOString(),
-      capacity: 100,
-      status: "PUBLISHED",
-      organizer_id: "admin-1",
-      registered_count: 1,
-      available_seats: 99,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    {
-      id: "demo-2",
-      title: "Campus Cultural Music Fest",
-      description: "Live student band performances, DJ night, food stalls, and music competitions.",
-      category: "Cultural",
-      location: "Open Air Theatre",
-      start_time: new Date(Date.now() + 86400000 * 7).toISOString(),
-      end_time: new Date(Date.now() + 86400000 * 7 + 14400000).toISOString(),
-      registration_deadline: new Date(Date.now() + 86400000 * 5).toISOString(),
-      capacity: 200,
-      status: "PUBLISHED",
-      organizer_id: "admin-1",
-      registered_count: 182,
-      available_seats: 18,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-  ];
+  // Clean default events array without unwanted demo items
+  const defaultEvents: ApiEvent[] = [];
   return defaultEvents;
 }
 

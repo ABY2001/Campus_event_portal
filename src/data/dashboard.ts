@@ -9,12 +9,12 @@ import type {
 
 export const studentProfile: StudentProfile = {
   id: "student-1",
-  name: "Aby Ponnachan",
+  name: "Campus Student",
   role: "Student",
   department: "Computer Science",
   year: "Final Year",
-  email: "aby@example.com",
-  avatarFallback: "AP",
+  email: "student@campus.edu",
+  avatarFallback: "CS",
   summary:
     "Discover upcoming events, register instantly, and track your registrations from one place.",
 };

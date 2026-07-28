@@ -38,20 +38,6 @@ export function LoginForm({
     }
   };
 
-  const handleFillDemoStudent = () => {
-    setRole("STUDENT");
-    setEmail("student@campus.edu");
-    setPassword("Student123!");
-    setLocalError(null);
-  };
-
-  const handleFillDemoAdmin = () => {
-    setRole("ADMIN");
-    setEmail("admin@campus.edu");
-    setPassword("Admin123!");
-    setLocalError(null);
-  };
-
   const displayError = errorMessage || localError;
 
   return (
@@ -121,32 +107,6 @@ export function LoginForm({
         required
         placeholder="Enter your password"
       />
-
-      {/* Quick Demo Credentials Assistant */}
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Quick Demo Accounts
-          </span>
-          <span className="text-xs text-slate-400">One-click auto-fill</span>
-        </div>
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={handleFillDemoStudent}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-100"
-          >
-            👨‍🎓 Fill Demo Student
-          </button>
-          <button
-            type="button"
-            onClick={handleFillDemoAdmin}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-100"
-          >
-            🔐 Fill Demo Admin
-          </button>
-        </div>
-      </div>
 
       {/* Submit Button */}
       <button

@@ -12,6 +12,8 @@ type DashboardLayoutProps = {
   categories: { id: string; label: string }[];
   selectedCategory?: string;
   onSelectCategory?: (category: string) => void;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
   events: ApiEvent[];
   onLogout?: () => void;
   profile: StudentProfile;
@@ -29,6 +31,8 @@ export function DashboardLayout({
   categories,
   selectedCategory = "All",
   onSelectCategory,
+  searchQuery = "",
+  onSearchChange,
   events,
   onLogout,
   profile,
@@ -53,7 +57,12 @@ export function DashboardLayout({
         <Sidebar onLogout={onLogout} />
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <Navbar onLogout={onLogout} profile={profile} />
+          <Navbar
+            onLogout={onLogout}
+            profile={profile}
+            searchQuery={searchQuery}
+            onSearchChange={onSearchChange}
+          />
 
           <main className="flex-1 overflow-y-auto px-4 py-5 sm:px-6 lg:px-7">
             <div className="space-y-6">
@@ -87,93 +96,90 @@ export function DashboardLayout({
               <div className="grid gap-6 xl:grid-cols-[1.8fr_1fr]">
                 {/* Events Discovery Section */}
                 <section className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
-                  <div className="mb-6 flex items-start justify-between gap-4">
+                  <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h2 className="text-2xl font-semibold text-slate-950">
                         Upcoming Campus Events ({events.length})
                       </h2>
                       <p className="mt-1 text-sm text-slate-500">
-                        Browse and register for upcoming student activities, workshops, and fests.
+                        {searchQuery
+                          ? `Showing search results for "${searchQuery}"`
+                          : "Browse and register for upcoming student activities, workshops, and fests."}
                       </p>
                     </div>
-                    <span className="rounded-full bg-violet-50 px-3 py-1 text-sm font-medium text-violet-700">
+                    <span className="self-start rounded-full bg-violet-50 px-3 py-1 text-sm font-medium text-violet-700 sm:self-auto">
                       Live Student Portal
                     </span>
                   </div>
 
                   {events.length === 0 ? (
                     <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
-                      No events found in this category. Check back soon!
+                      {searchQuery
+                        ? `No events found matching "${searchQuery}". Try a different keyword.`
+                        : "No events available in this category."}
                     </div>
                   ) : (
-                    <div className="grid gap-5">
+                    <div className="grid gap-4 md:grid-cols-2">
                       {events.map((event) => (
                         <EventCard
                           event={event}
                           isRegistered={registeredEventIds.has(event.id)}
-                          isRegistering={actionLoadingEventId === event.id}
                           key={event.id}
-                          onRegister={onRegisterEvent}
-                          onCancel={onCancelRegistration}
+                          onRegister={() => onRegisterEvent?.(event.id)}
+                          onCancel={() => onCancelRegistration?.(event.id)}
+                          isRegistering={actionLoadingEventId === event.id}
                         />
                       ))}
                     </div>
                   )}
                 </section>
 
-                {/* Sidebar Column: My Registrations & Announcements */}
+                {/* Right Column: Registrations & Announcements */}
                 <div className="space-y-6">
                   <section className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
-                    <div className="mb-6">
-                      <h2 className="text-2xl font-semibold text-slate-950">
-                        My Registrations ({registrations.filter((r) => r.status !== "CANCELLED").length})
-                      </h2>
-                      <p className="mt-1 text-sm text-slate-500">
-                        Track confirmed and pending event registrations.
-                      </p>
-                    </div>
+                    <h2 className="text-2xl font-semibold text-slate-950">
+                      My Registrations ({registrations.length})
+                    </h2>
+                    <p className="mt-1 text-sm text-slate-500">
+                      Events you are currently enrolled in.
+                    </p>
 
-                    {registrations.filter((r) => r.status !== "CANCELLED").length === 0 ? (
-                      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-6 text-center text-xs text-slate-500">
-                        You have not registered for any events yet. Click "Register Now" on any event above!
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {registrations
-                          .filter((r) => r.status !== "CANCELLED")
-                          .map((registration) => (
-                            <RegistrationCard
-                              key={registration.id}
-                              registration={registration}
-                              onCancel={onCancelRegistration}
-                            />
-                          ))}
-                      </div>
-                    )}
+                    <div className="mt-4 space-y-3">
+                      {registrations.length === 0 ? (
+                        <p className="text-xs text-slate-400">No active registrations yet.</p>
+                      ) : (
+                        registrations.map((item) => (
+                          <RegistrationCard
+                            key={item.id}
+                            registration={item}
+                            onCancel={() => onCancelRegistration?.(item.event_id)}
+                          />
+                        ))
+                      )}
+                    </div>
                   </section>
 
                   <section className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
-                    <div className="mb-6">
-                      <h2 className="text-2xl font-semibold text-slate-950">
-                        Recent Announcements
-                      </h2>
-                      <p className="mt-1 text-sm text-slate-500">
-                        Latest updates from the event management team.
-                      </p>
-                    </div>
-
-                    <div className="space-y-4">
-                      {announcements.map((announcement) => (
-                        <div key={announcement.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                    <h2 className="text-2xl font-semibold text-slate-950">Campus Bulletins</h2>
+                    <div className="mt-4 space-y-3">
+                      {announcements.map((bulletin) => (
+                        <article
+                          className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-100/60"
+                          key={bulletin.id}
+                        >
                           <div className="flex items-center justify-between">
-                            <span className="rounded-full bg-violet-100 px-2.5 py-0.5 text-[11px] font-semibold text-violet-700">
-                              {announcement.badge}
+                            <span className="text-xs font-semibold text-violet-700">
+                              {bulletin.badge || "Bulletin"}
                             </span>
-                            <span className="text-[10px] text-slate-400">{announcement.time}</span>
+                            <span className="text-xs text-slate-400">{bulletin.date}</span>
                           </div>
-                          <h4 className="mt-2 text-sm font-semibold text-slate-950">{announcement.title}</h4>
-                          <p className="mt-1 text-xs text-slate-500">{announcement.description}</p>
-                        </div>
+                          <h3 className="mt-2 text-base font-semibold text-slate-900">
+                            {bulletin.title}
+                          </h3>
+                          <p className="mt-1 text-xs text-slate-600">
+                            {bulletin.description}
+                          </p>
+                        </article>
                       ))}
                     </div>
                   </section>

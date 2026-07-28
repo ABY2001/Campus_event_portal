@@ -80,14 +80,14 @@ export function EventCard({
         </div>
 
         <div className="grid gap-3 md:grid-cols-3">
-          <div className="rounded-2xl bg-white px-4 py-3 text-xs text-slate-600 border border-slate-200">
-            📅 {formattedDate}
+          <div className="rounded-2xl bg-white px-4 py-3 text-xs font-medium text-slate-700 border border-slate-200">
+            {formattedDate}
           </div>
-          <div className="rounded-2xl bg-white px-4 py-3 text-xs text-slate-600 border border-slate-200">
-            ⏰ {formattedTime}
+          <div className="rounded-2xl bg-white px-4 py-3 text-xs font-medium text-slate-700 border border-slate-200">
+            {formattedTime}
           </div>
-          <div className="rounded-2xl bg-white px-4 py-3 text-xs text-slate-600 border border-slate-200">
-            📍 {event.location}
+          <div className="rounded-2xl bg-white px-4 py-3 text-xs font-medium text-slate-700 border border-slate-200">
+            {event.location}
           </div>
         </div>
 

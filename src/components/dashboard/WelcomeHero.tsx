@@ -16,7 +16,7 @@ export function WelcomeHero({ profile, stats }: WelcomeHeroProps) {
           </span>
           <div className="space-y-3">
             <h2 className="text-4xl font-semibold tracking-tight sm:text-5xl">
-              Welcome back, {profile.name} 👋
+              Welcome back, {profile.name}
             </h2>
             <p className="max-w-2xl text-base leading-7 text-slate-300">
               {profile.summary}

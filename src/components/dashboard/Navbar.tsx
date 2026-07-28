@@ -1,12 +1,15 @@
 import { HiOutlineLogout } from "react-icons/hi";
+import { FiSearch } from "react-icons/fi";
 import type { StudentProfile } from "@/types/dashboard";
 
 type NavbarProps = {
   profile: StudentProfile;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
   onLogout?: () => void;
 };
 
-export function Navbar({ profile, onLogout }: NavbarProps) {
+export function Navbar({ profile, searchQuery = "", onSearchChange, onLogout }: NavbarProps) {
   return (
     <header className="border-b border-slate-200 bg-white px-4 py-5 sm:px-6 lg:px-7">
       <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
@@ -20,8 +23,26 @@ export function Navbar({ profile, onLogout }: NavbarProps) {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex h-12 min-w-[240px] items-center rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm text-slate-400 sm:min-w-[320px]">
-            Search events, workshops, categories...
+          {/* Functional Search Bar */}
+          <div className="relative flex items-center min-w-[240px] sm:min-w-[340px]">
+            <FiSearch className="absolute left-4 text-base text-slate-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              placeholder="Search events, workshops, locations..."
+              className="h-12 w-full rounded-2xl border border-slate-200 bg-slate-50 pl-11 pr-9 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-900/10"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => onSearchChange?.("")}
+                className="absolute right-3 flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 transition hover:bg-slate-300"
+                title="Clear search"
+              >
+                ✕
+              </button>
+            )}
           </div>
 
           <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-1.5 shadow-sm">

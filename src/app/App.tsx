@@ -52,7 +52,7 @@ export function App() {
   if (route === "student-dashboard") {
     return (
       <StudentDashboardPage
-        userName={currentUser?.full_name || "Aby Ponnachan"}
+        userName={currentUser?.full_name || "Campus Student"}
         onLogout={handleLogout}
       />
     );

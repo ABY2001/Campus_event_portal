@@ -69,7 +69,7 @@ export function LoginPage({ onSuccess, onNavigateToSignup }: LoginPageProps) {
           token_type: "bearer",
           user_id: "demo-user-id",
           email: credentials.email,
-          full_name: actualAccountRole === "ADMIN" ? "Campus Admin" : "Aby Ponnachan",
+          full_name: actualAccountRole === "ADMIN" ? "Campus Admin" : "Campus Student",
           role: actualAccountRole,
         };
         localStorage.setItem("campus_access_token", demoUser.access_token);

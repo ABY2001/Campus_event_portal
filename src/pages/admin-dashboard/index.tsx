@@ -15,6 +15,9 @@ import {
   type ApiParticipant,
 } from "@/lib/api";
 import { PasswordField } from "@/components/auth/PasswordField";
+import { FiSearch } from "react-icons/fi";
+import { CiLogout } from "react-icons/ci";
+import { MdOutlineDashboardCustomize } from "react-icons/md";
 
 type AdminDashboardPageProps = {
   onLogout?: () => void;
@@ -127,6 +130,18 @@ export function AdminDashboardPage({
     loadKpis();
     loadEvents();
   }, [page, searchQuery]);
+
+  // Dynamic search filtering across title, description, category, and location
+  const displayedEvents = events.filter((ev) => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return true;
+    return (
+      ev.title.toLowerCase().includes(query) ||
+      ev.description.toLowerCase().includes(query) ||
+      ev.category.toLowerCase().includes(query) ||
+      ev.location.toLowerCase().includes(query)
+    );
+  });
 
   // Dynamic KPI calculation values directly calculated from active state
   const dynamicTotalEvents = events.length;
@@ -344,27 +359,27 @@ export function AdminDashboardPage({
               </div>
             </div>
             <nav className="space-y-4">
-              {["Dashboard", "Events", "Users", "Settings"].map((item, index) => (
+              {["Dashboard"].map((item, index) => (
                 <button
-                  className={`mx-auto flex h-14 w-14 items-center justify-center rounded-3xl text-[11px] font-medium transition ${
-                    index === 0 ? "bg-white text-slate-950" : "bg-white/10 text-white hover:bg-white/20"
+                  className={`mx-auto flex h-14 w-14 items-center justify-center rounded-3xl text-sm font-medium transition ${
+                    index === 0 ? "bg-white text-slate-950 shadow-sm" : "bg-white/10 text-white hover:bg-white/20"
                   }`}
                   key={item}
                   title={item}
                   type="button"
                 >
-                  {item.slice(0, 2)}
+                  <MdOutlineDashboardCustomize className="text-2xl" />
                 </button>
               ))}
             </nav>
           </div>
           <button
-            className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-white/10 text-[11px] font-medium text-white transition hover:bg-white/20"
+            className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-white/10 text-white transition hover:bg-red-500/20 hover:text-red-400"
             onClick={onLogout}
             title="Sign out & return to Login"
             type="button"
           >
-            LO
+            <CiLogout className="text-2xl" />
           </button>
         </aside>
 
@@ -382,13 +397,27 @@ export function AdminDashboardPage({
               </div>
 
               <div className="flex flex-wrap items-center gap-3">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search live events by title, location..."
-                  className="h-14 min-w-[240px] rounded-[22px] border border-slate-200 bg-slate-50 px-4 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white sm:min-w-[320px]"
-                />
+                {/* Search Bar */}
+                <div className="relative flex items-center min-w-[240px] sm:min-w-[340px]">
+                  <FiSearch className="absolute left-4 text-base text-slate-400" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search live events by title, location..."
+                    className="h-14 w-full rounded-[22px] border border-slate-200 bg-slate-50 pl-11 pr-10 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:bg-white focus:ring-2 focus:ring-slate-900/10"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      className="absolute right-3.5 flex h-6 w-6 items-center justify-center rounded-full bg-slate-200 text-xs font-bold text-slate-600 transition hover:bg-slate-300"
+                      title="Clear search"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
 
                 <button
                   onClick={() => {
@@ -500,10 +529,12 @@ export function AdminDashboardPage({
                 <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                   <div>
                     <h2 className="text-2xl font-semibold text-slate-950">
-                      Live Campus Events Management ({events.length})
+                      Live Campus Events Management ({displayedEvents.length})
                     </h2>
                     <p className="mt-1 text-sm text-slate-500">
-                      Manage events, edit details, upload banner images, and track registered participants.
+                      {searchQuery
+                        ? `Showing results for "${searchQuery}"`
+                        : "Manage events, edit details, upload banner images, and track registered participants."}
                     </p>
                   </div>
                   <button
@@ -519,13 +550,15 @@ export function AdminDashboardPage({
 
                 {isLoadingEvents ? (
                   <div className="py-12 text-center text-sm text-slate-400">Loading live events database...</div>
-                ) : events.length === 0 ? (
+                ) : displayedEvents.length === 0 ? (
                   <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center text-sm text-slate-500">
-                    No events found. Click "+ Create New Event" to publish your first campus event!
+                    {searchQuery
+                      ? `No events found matching "${searchQuery}".`
+                      : 'No events found. Click "+ Create New Event" to publish your first campus event!'}
                   </div>
                 ) : (
                   <div className="grid gap-5 lg:grid-cols-2">
-                    {events.map((ev) => (
+                    {displayedEvents.map((ev) => (
                       <article className="rounded-[28px] border border-slate-200 bg-slate-50 p-5" key={ev.id}>
                         <div className="flex items-start justify-between gap-4">
                           <div>
@@ -560,13 +593,13 @@ export function AdminDashboardPage({
 
                         <div className="mt-4 flex flex-wrap gap-2 text-xs text-slate-600">
                           <div className="rounded-xl bg-white px-3 py-2 border border-slate-200">
-                            📍 {ev.location}
+                            {ev.location}
                           </div>
                           <div className="rounded-xl bg-white px-3 py-2 border border-slate-200">
-                            📅 {new Date(ev.start_time).toLocaleDateString()} at {new Date(ev.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(ev.start_time).toLocaleDateString()} at {new Date(ev.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                           </div>
                           <div className="rounded-xl bg-white px-3 py-2 border border-slate-200">
-                            👥 {ev.registered_count} / {ev.capacity} Registered
+                            {ev.registered_count} / {ev.capacity} Registered
                           </div>
                         </div>
 
@@ -575,25 +608,25 @@ export function AdminDashboardPage({
                             onClick={() => handleOpenEditModal(ev)}
                             className="h-10 rounded-xl bg-slate-950 px-4 text-xs font-semibold text-white hover:bg-slate-800"
                           >
-                            ✏️ Edit
+                            Edit
                           </button>
                           <button
                             onClick={() => setBannerUploadEvent(ev)}
                             className="h-10 rounded-xl border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-700 hover:bg-slate-100"
                           >
-                            🖼️ Upload Banner
+                            Upload Banner
                           </button>
                           <button
                             onClick={() => handleOpenParticipants(ev)}
                             className="h-10 rounded-xl border border-slate-300 bg-white px-4 text-xs font-semibold text-slate-700 hover:bg-slate-100"
                           >
-                            👥 Participants ({ev.registered_count})
+                            Participants ({ev.registered_count})
                           </button>
                           <button
                             onClick={() => handleDeleteEvent(ev.id, ev.title)}
                             className="h-10 rounded-xl border border-red-200 bg-red-50 px-4 text-xs font-semibold text-red-600 hover:bg-red-100"
                           >
-                            🗑️ Delete
+                            Delete
                           </button>
                         </div>
                       </article>

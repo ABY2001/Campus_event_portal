@@ -1,14 +1,11 @@
+import { CiLogout } from "react-icons/ci";
+import { MdOutlineDashboardCustomize } from "react-icons/md";
+
 type SidebarProps = {
   onLogout?: () => void;
 };
 
-const navItems = [
-  "Dashboard",
-  "Events",
-  "My Registrations",
-  "Profile",
-  "Settings",
-];
+const navItems = ["Dashboard"];
 
 export function Sidebar({ onLogout }: SidebarProps) {
   return (
@@ -24,28 +21,28 @@ export function Sidebar({ onLogout }: SidebarProps) {
           {navItems.map((item, index) => (
             <button
               className={[
-                "mx-auto flex h-14 w-14 items-center justify-center rounded-3xl text-[11px] font-medium transition",
+                "mx-auto flex h-14 w-14 items-center justify-center rounded-3xl text-sm font-medium transition",
                 index === 0
-                  ? "bg-white text-slate-950"
+                  ? "bg-white text-slate-950 shadow-sm"
                   : "bg-white/10 text-white hover:bg-white/20",
               ].join(" ")}
               key={item}
               type="button"
               title={item}
             >
-              {item.slice(0, 2)}
+              <MdOutlineDashboardCustomize className="text-2xl" />
             </button>
           ))}
         </nav>
       </div>
 
       <button
-        className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-white/10 text-[11px] font-medium text-white transition hover:bg-white/20"
+        className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-white/10 text-white transition hover:bg-red-500/20 hover:text-red-400"
         type="button"
         onClick={onLogout}
-        title="Logout"
+        title="Sign out & return to Login"
       >
-        LO
+        <CiLogout className="text-2xl" />
       </button>
     </aside>
   );

@@ -132,9 +132,13 @@ For Student access:
 
 ---
 
-## 📖 System Architecture & Documentation
+## 📖 Engineering Requirements Documentation
 
-* **Architecture Diagram**: [docs/architecture_diagram.md](file:///d:/campus/Campus_event_portal/docs/architecture_diagram.md)
-* **Database Schema SQL**: [docs/schema.sql](file:///d:/campus/Campus_event_portal/docs/schema.sql)
-* **DB ERD Specs**: [db_design.md](file:///C:/Users/abypo/.gemini/antigravity/brain/e384234d-31cb-48ea-bdfd-7b0190345c3d/db_design.md)
-* **Swagger API Specification**: Available at `http://localhost:8000/docs` when running the backend.
+* **System Design & Architecture Diagram**: [docs/architecture_diagram.md](file:///d:/campus/Campus_event_portal/docs/architecture_diagram.md)
+* **REST API Specification**: [API_DESIGN.md](file:///d:/campus/Campus_event_portal/API_DESIGN.md)
+* **Environment Variables Guide**: [.env.example](file:///d:/campus/Campus_event_portal/.env.example)
+* **Swagger API Documentation**: [SWAGGER_DOCS.md](file:///d:/campus/Campus_event_portal/SWAGGER_DOCS.md) *(Live at http://localhost:8001/docs)*
+* **Logging & Error Handling**: [LOGGING_AND_ERRORS.md](file:///d:/campus/Campus_event_portal/LOGGING_AND_ERRORS.md)
+* **Pagination & Search Implementation**: [PAGINATION_AND_SEARCH.md](file:///d:/campus/Campus_event_portal/PAGINATION_AND_SEARCH.md)
+* **Database SQL Schema**: [docs/schema.sql](file:///d:/campus/Campus_event_portal/docs/schema.sql)
+* **Docker Compose Stack Config**: [docker-compose.yml](file:///d:/campus/Campus_event_portal/docker-compose.yml)

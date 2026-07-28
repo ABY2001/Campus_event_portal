@@ -24,7 +24,7 @@ export function RegistrationCard({ registration, onCancel }: RegistrationCardPro
         <div>
           <h3 className="text-base font-semibold text-slate-950">{eventTitle}</h3>
           <p className="mt-1 text-xs text-slate-500">
-            📅 {eventDate} {registration.event?.location ? `• 📍 ${registration.event.location}` : ""}
+            {eventDate} {registration.event?.location ? `• ${registration.event.location}` : ""}
           </p>
         </div>
 
