@@ -1,7 +1,7 @@
 export type DashboardStat = {
   id: string;
   label: string;
-  value: number;
+  value: string | number;
 };
 
 export type CategoryFilter = {
@@ -35,6 +35,8 @@ export type Announcement = {
   title: string;
   description: string;
   date: string;
+  badge?: string;
+  time?: string;
 };
 
 export type StudentProfile = {

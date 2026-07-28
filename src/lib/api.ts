@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000/api";
+const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8001/api";
 
 export type ApiAuthResponse = {
   access_token: string;
@@ -58,21 +58,98 @@ export type ApiParticipant = {
   };
 };
 
-function getAuthHeader(): Record<string, string> {
+export type ApiRegistration = {
+  id: string;
+  event_id: string;
+  user_id: string;
+  status: "REGISTERED" | "WAITLISTED" | "CANCELLED";
+  registered_at: string;
+  event?: ApiEvent;
+};
+
+export function isDemoToken(): boolean {
   const token = localStorage.getItem("campus_access_token");
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  return !token || token.startsWith("demo_token");
 }
 
-export async function loginUserApi(credentials: { email: string; password: string}): Promise<ApiAuthResponse> {
+export function getSharedEvents(): ApiEvent[] {
+  try {
+    const data = localStorage.getItem("campus_shared_events");
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+
+  const defaultEvents: ApiEvent[] = [
+    {
+      id: "demo-1",
+      title: "Tech Talk 2026",
+      description: "Annual university tech conference featuring AI and web development.",
+      category: "Workshop",
+      location: "Auditorium A",
+      start_time: new Date(Date.now() + 86400000 * 3).toISOString(),
+      end_time: new Date(Date.now() + 86400000 * 3 + 7200000).toISOString(),
+      registration_deadline: new Date(Date.now() + 86400000 * 2).toISOString(),
+      capacity: 100,
+      status: "PUBLISHED",
+      organizer_id: "admin-1",
+      registered_count: 1,
+      available_seats: 99,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+    {
+      id: "demo-2",
+      title: "Campus Cultural Music Fest",
+      description: "Live student band performances, DJ night, food stalls, and music competitions.",
+      category: "Cultural",
+      location: "Open Air Theatre",
+      start_time: new Date(Date.now() + 86400000 * 7).toISOString(),
+      end_time: new Date(Date.now() + 86400000 * 7 + 14400000).toISOString(),
+      registration_deadline: new Date(Date.now() + 86400000 * 5).toISOString(),
+      capacity: 200,
+      status: "PUBLISHED",
+      organizer_id: "admin-1",
+      registered_count: 182,
+      available_seats: 18,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  ];
+  return defaultEvents;
+}
+
+export function saveSharedEvents(events: ApiEvent[]) {
+  try {
+    localStorage.setItem("campus_shared_events", JSON.stringify(events));
+  } catch {}
+}
+
+function getAuthHeader(): Record<string, string> {
+  const token = localStorage.getItem("campus_access_token");
+  if (!token) return {};
+  return { Authorization: `Bearer ${token}` };
+}
+
+export async function loginUserApi(credentials: {
+  email: string;
+  password: string;
+}): Promise<ApiAuthResponse> {
   const response = await fetch(`${API_BASE}/auth/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(credentials),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: credentials.email,
+      password: credentials.password,
+    }),
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ detail: "Login failed." }));
-    throw new Error(errorData.detail || "Invalid email or password");
+    throw new Error(errorData.detail || "Invalid email or password.");
   }
 
   const data: ApiAuthResponse = await response.json();
@@ -81,25 +158,32 @@ export async function loginUserApi(credentials: { email: string; password: strin
   return data;
 }
 
-export async function registerUserApi(payload: {
+export async function registerUserApi(userData: {
   email: string;
   password: string;
   full_name: string;
-  role: "STUDENT" | "ADMIN";
-  student_id_number?: string;
+  role?: string;
   department?: string;
-  year_of_study?: number;
-  phone_number?: string;
+  student_id_number?: string;
 }): Promise<ApiAuthResponse> {
   const response = await fetch(`${API_BASE}/auth/register`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      email: userData.email,
+      password: userData.password,
+      full_name: userData.full_name,
+      role: userData.role || "STUDENT",
+      department: userData.department,
+      student_id_number: userData.student_id_number,
+    }),
   });
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ detail: "Registration failed." }));
-    throw new Error(errorData.detail || "Registration failed. Please check input values.");
+    throw new Error(errorData.detail || "Failed to create account.");
   }
 
   const data: ApiAuthResponse = await response.json();
@@ -108,35 +192,48 @@ export async function registerUserApi(payload: {
   return data;
 }
 
-export async function createCustomAdminApi(payload: {
+export async function createCustomAdminApi(adminData: {
   email: string;
   password: string;
   full_name: string;
-}) {
+}): Promise<ApiAuthResponse> {
+  if (isDemoToken()) {
+    throw new Error("Demo mode: admin account created locally.");
+  }
+
   const response = await fetch(`${API_BASE}/auth/create-admin`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...getAuthHeader(),
     },
-    body: JSON.stringify({ ...payload, role: "ADMIN" }),
+    body: JSON.stringify({
+      email: adminData.email,
+      password: adminData.password,
+      full_name: adminData.full_name,
+      role: "ADMIN",
+    }),
   });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ detail: "Admin creation failed." }));
-    throw new Error(errorData.detail || "Could not create custom admin account.");
+    const err = await response.json().catch(() => ({ detail: "Failed to create admin account." }));
+    throw new Error(err.detail || "Failed to create admin.");
   }
 
   return await response.json();
 }
 
 export async function getDashboardKPIsApi(): Promise<ApiDashboardKPIs> {
+  if (isDemoToken()) {
+    throw new Error("Demo mode: using local KPI state.");
+  }
+
   const response = await fetch(`${API_BASE}/dashboard/kpis`, {
     headers: { ...getAuthHeader() },
   });
 
   if (!response.ok) {
-    throw new Error("Failed to fetch dashboard KPI metrics.");
+    throw new Error("Failed to fetch dashboard KPIs.");
   }
 
   return await response.json();
@@ -175,6 +272,10 @@ export async function createEventApi(eventData: {
   capacity: number;
   status?: string;
 }): Promise<ApiEvent> {
+  if (isDemoToken()) {
+    throw new Error("Demo mode: event saved locally.");
+  }
+
   const response = await fetch(`${API_BASE}/events`, {
     method: "POST",
     headers: {
@@ -193,6 +294,10 @@ export async function createEventApi(eventData: {
 }
 
 export async function updateEventApi(eventId: string, eventData: Partial<ApiEvent>): Promise<ApiEvent> {
+  if (isDemoToken()) {
+    throw new Error("Demo mode: event updated locally.");
+  }
+
   const response = await fetch(`${API_BASE}/events/${eventId}`, {
     method: "PUT",
     headers: {
@@ -211,6 +316,8 @@ export async function updateEventApi(eventId: string, eventData: Partial<ApiEven
 }
 
 export async function deleteEventApi(eventId: string): Promise<void> {
+  if (isDemoToken()) return;
+
   const response = await fetch(`${API_BASE}/events/${eventId}`, {
     method: "DELETE",
     headers: { ...getAuthHeader() },
@@ -222,6 +329,10 @@ export async function deleteEventApi(eventId: string): Promise<void> {
 }
 
 export async function uploadEventBannerApi(eventId: string, file: File): Promise<ApiEvent> {
+  if (isDemoToken()) {
+    throw new Error("Demo mode: banner uploaded locally.");
+  }
+
   const formData = new FormData();
   formData.append("file", file);
 
@@ -239,12 +350,68 @@ export async function uploadEventBannerApi(eventId: string, file: File): Promise
 }
 
 export async function getEventParticipantsApi(eventId: string): Promise<ApiParticipant[]> {
+  if (isDemoToken()) {
+    throw new Error("Demo mode: using local participants.");
+  }
+
   const response = await fetch(`${API_BASE}/registrations/events/${eventId}/participants`, {
     headers: { ...getAuthHeader() },
   });
 
   if (!response.ok) {
     throw new Error("Failed to fetch event participants.");
+  }
+
+  return await response.json();
+}
+
+export async function registerForEventApi(eventId: string): Promise<ApiRegistration> {
+  if (isDemoToken()) {
+    throw new Error("Demo mode: registered locally.");
+  }
+
+  const response = await fetch(`${API_BASE}/registrations/events/${eventId}`, {
+    method: "POST",
+    headers: { ...getAuthHeader() },
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: "Failed to register for event." }));
+    throw new Error(err.detail || "Error registering for event.");
+  }
+
+  return await response.json();
+}
+
+export async function cancelRegistrationApi(eventId: string): Promise<ApiRegistration> {
+  if (isDemoToken()) {
+    throw new Error("Demo mode: registration cancelled locally.");
+  }
+
+  const response = await fetch(`${API_BASE}/registrations/events/${eventId}`, {
+    method: "DELETE",
+    headers: { ...getAuthHeader() },
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({ detail: "Failed to cancel registration." }));
+    throw new Error(err.detail || "Error cancelling registration.");
+  }
+
+  return await response.json();
+}
+
+export async function listMyRegistrationsApi(): Promise<ApiRegistration[]> {
+  if (isDemoToken()) {
+    throw new Error("Demo mode: using local registrations.");
+  }
+
+  const response = await fetch(`${API_BASE}/registrations/my`, {
+    headers: { ...getAuthHeader() },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch my registrations.");
   }
 
   return await response.json();

@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing import List, Optional
+from typing import List
 import os
 
 class Settings(BaseSettings):
@@ -8,7 +8,6 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api"
     
     # PostgreSQL Database URL
-    # Format: postgresql://user:password@host:port/dbname
     DATABASE_URL: str = os.getenv(
         "DATABASE_URL", 
         "postgresql://postgres:postgres@localhost:5432/campus_db"
@@ -19,14 +18,17 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7 # 7 days
     
-    # CORS Origins
+    # Allowed CORS Origins (Wildcard '*' removed so credentials are permitted)
     CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
         "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:5175",
+        "http://localhost:3000",
         "http://localhost:80",
-        "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
-        "*"
+        "http://127.0.0.1:5174",
+        "http://127.0.0.1:5175",
+        "http://127.0.0.1:3000",
     ]
     
     # Upload directory for event banners

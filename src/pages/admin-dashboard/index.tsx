@@ -8,6 +8,8 @@ import {
   uploadEventBannerApi,
   getEventParticipantsApi,
   createCustomAdminApi,
+  getSharedEvents,
+  saveSharedEvents,
   type ApiDashboardKPIs,
   type ApiEvent,
   type ApiParticipant,
@@ -31,8 +33,8 @@ export function AdminDashboardPage({
   const [studentUsersCount, setStudentUsersCount] = useState(1);
   const [adminUsersCount, setAdminUsersCount] = useState(1);
 
-  // Live Events Data
-  const [events, setEvents] = useState<ApiEvent[]>([]);
+  // Shared Events Data
+  const [events, setEvents] = useState<ApiEvent[]>(() => getSharedEvents());
   const [isLoadingEvents, setIsLoadingEvents] = useState(true);
 
   // Search & Pagination
@@ -108,49 +110,14 @@ export function AdminDashboardPage({
       const res = await getEventsApi({ search: searchQuery, page, size: 10 });
       if (res.items && res.items.length > 0) {
         setEvents(res.items);
-      } else if (events.length === 0) {
-        setEvents([
-          {
-            id: "demo-1",
-            title: "Tech Talk 2026",
-            description: "Annual university tech conference featuring AI and web development.",
-            category: "Workshop",
-            location: "Auditorium A",
-            start_time: new Date(Date.now() + 86400000 * 3).toISOString(),
-            end_time: new Date(Date.now() + 86400000 * 3 + 7200000).toISOString(),
-            registration_deadline: new Date(Date.now() + 86400000 * 2).toISOString(),
-            capacity: 100,
-            status: "PUBLISHED",
-            organizer_id: "admin-1",
-            registered_count: 1,
-            available_seats: 99,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        ]);
+        saveSharedEvents(res.items);
+      } else {
+        const stored = getSharedEvents();
+        setEvents(stored);
       }
     } catch {
-      if (events.length === 0) {
-        setEvents([
-          {
-            id: "demo-1",
-            title: "Tech Talk 2026",
-            description: "Annual university tech conference featuring AI and web development.",
-            category: "Workshop",
-            location: "Auditorium A",
-            start_time: new Date(Date.now() + 86400000 * 3).toISOString(),
-            end_time: new Date(Date.now() + 86400000 * 3 + 7200000).toISOString(),
-            registration_deadline: new Date(Date.now() + 86400000 * 2).toISOString(),
-            capacity: 100,
-            status: "PUBLISHED",
-            organizer_id: "admin-1",
-            registered_count: 1,
-            available_seats: 99,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        ]);
-      }
+      const stored = getSharedEvents();
+      setEvents(stored);
     } finally {
       setIsLoadingEvents(false);
     }
@@ -233,13 +200,17 @@ export function AdminDashboardPage({
     };
 
     setEvents((prev) => {
+      let updated: ApiEvent[];
       if (editingEvent) {
-        return prev.map((item) => (item.id === editingEvent.id ? newDisplayEvent : item));
+        updated = prev.map((item) => (item.id === editingEvent.id ? newDisplayEvent : item));
+      } else {
+        updated = [newDisplayEvent, ...prev];
       }
-      return [newDisplayEvent, ...prev];
+      saveSharedEvents(updated);
+      return updated;
     });
 
-    setFeedbackMsg(`Event "${eventTitle}" ${editingEvent ? "updated" : "created"} successfully!`);
+    setFeedbackMsg(`Event "${eventTitle}" ${editingEvent ? "updated" : "published"} successfully!`);
     resetEventForm();
     setIsActionLoading(false);
   };
@@ -252,7 +223,11 @@ export function AdminDashboardPage({
     } catch {
       // Local fallback
     }
-    setEvents((current) => current.filter((ev) => ev.id !== eventId));
+    setEvents((current) => {
+      const updated = current.filter((ev) => ev.id !== eventId);
+      saveSharedEvents(updated);
+      return updated;
+    });
     setFeedbackMsg(`Event "${title}" deleted successfully.`);
   };
 
@@ -266,13 +241,17 @@ export function AdminDashboardPage({
 
     try {
       const updated = await uploadEventBannerApi(bannerUploadEvent.id, bannerFile);
-      setEvents((prev) =>
-        prev.map((ev) => (ev.id === bannerUploadEvent.id ? { ...ev, banner_url: updated.banner_url || bannerPreviewUrl } : ev))
-      );
+      setEvents((prev) => {
+        const updatedList = prev.map((ev) => (ev.id === bannerUploadEvent.id ? { ...ev, banner_url: updated.banner_url || bannerPreviewUrl } : ev));
+        saveSharedEvents(updatedList);
+        return updatedList;
+      });
     } catch {
-      setEvents((prev) =>
-        prev.map((ev) => (ev.id === bannerUploadEvent.id ? { ...ev, banner_url: bannerPreviewUrl } : ev))
-      );
+      setEvents((prev) => {
+        const updatedList = prev.map((ev) => (ev.id === bannerUploadEvent.id ? { ...ev, banner_url: bannerPreviewUrl } : ev));
+        saveSharedEvents(updatedList);
+        return updatedList;
+      });
     }
 
     setFeedbackMsg(`Banner uploaded for event "${bannerUploadEvent.title}"!`);

@@ -1,7 +1,14 @@
 import uuid
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, Field
+
+# Try importing EmailStr; fallback to str if email-validator is not installed
+try:
+    from pydantic import EmailStr
+except Exception:
+    EmailStr = str
+
 from app.models.models import UserRole, EventStatus, RegistrationStatus, AnnouncementPriority
 
 # Authentication Schemas

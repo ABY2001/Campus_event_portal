@@ -22,10 +22,8 @@ export function SignupPage({ onSuccess, onNavigateToLogin }: SignupPageProps) {
         password: payload.password,
         full_name: payload.name,
         role: payload.role,
-        student_id_number: payload.studentIdNumber,
         department: payload.department,
-        year_of_study: payload.yearOfStudy,
-        phone_number: payload.phoneNumber,
+        student_id_number: payload.studentIdNumber,
       });
       onSuccess?.(user);
     } catch (err: any) {
