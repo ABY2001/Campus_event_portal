@@ -140,5 +140,6 @@ For Student access:
 * **Swagger API Documentation**: [SWAGGER_DOCS.md](file:///d:/campus/Campus_event_portal/SWAGGER_DOCS.md) *(Live at http://localhost:8001/docs)*
 * **Logging & Error Handling**: [LOGGING_AND_ERRORS.md](file:///d:/campus/Campus_event_portal/LOGGING_AND_ERRORS.md)
 * **Pagination & Search Implementation**: [PAGINATION_AND_SEARCH.md](file:///d:/campus/Campus_event_portal/PAGINATION_AND_SEARCH.md)
+* **Database Architecture & ERD Diagram**: [docs/db_architecture.md](file:///d:/campus/Campus_event_portal/docs/db_architecture.md)
 * **Database SQL Schema**: [docs/schema.sql](file:///d:/campus/Campus_event_portal/docs/schema.sql)
 * **Docker Compose Stack Config**: [docker-compose.yml](file:///d:/campus/Campus_event_portal/docker-compose.yml)
