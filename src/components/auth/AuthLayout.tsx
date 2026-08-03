@@ -1,4 +1,5 @@
-import type { PropsWithChildren } from "react";
+import { useState, useEffect, type PropsWithChildren } from "react";
+import { getDashboardKPIsApi, getSharedEvents, type ApiDashboardKPIs } from "@/lib/api";
 
 type AuthLayoutProps = PropsWithChildren<{
   title?: string;
@@ -6,6 +7,33 @@ type AuthLayoutProps = PropsWithChildren<{
 }>;
 
 export function AuthLayout({ children, description, title }: AuthLayoutProps) {
+  const [kpiData, setKpiData] = useState<{
+    totalEvents: number;
+    totalRegistrations: number;
+    upcomingEvents: number;
+  }>(() => {
+    const shared = getSharedEvents();
+    return {
+      totalEvents: shared.length,
+      totalRegistrations: shared.reduce((sum, e) => sum + (e.registered_count || 0), 0),
+      upcomingEvents: shared.filter((e) => e.status === "PUBLISHED").length,
+    };
+  });
+
+  useEffect(() => {
+    getDashboardKPIsApi()
+      .then((data: ApiDashboardKPIs) => {
+        setKpiData({
+          totalEvents: data.total_events,
+          totalRegistrations: data.total_active_registrations,
+          upcomingEvents: data.upcoming_events,
+        });
+      })
+      .catch(() => {
+        // Dynamic fallback calculated from active state
+      });
+  }, []);
+
   return (
     <div className="min-h-screen w-full bg-slate-100 text-slate-950">
       <div className="grid min-h-screen w-full overflow-hidden bg-white shadow-[0_24px_80px_-40px_rgba(15,23,42,0.35)] lg:grid-cols-[1.05fr_0.95fr]">
@@ -30,16 +58,16 @@ export function AuthLayout({ children, description, title }: AuthLayoutProps) {
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur">
-              <p className="text-sm text-slate-300">Live events</p>
-              <p className="mt-2 text-3xl font-semibold">24</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-300">Live events</p>
+              <p className="mt-2 text-3xl font-semibold">{kpiData.totalEvents}</p>
             </div>
             <div className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur">
-              <p className="text-sm text-slate-300">Registrations</p>
-              <p className="mt-2 text-3xl font-semibold">892</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-300">Registrations</p>
+              <p className="mt-2 text-3xl font-semibold">{kpiData.totalRegistrations}</p>
             </div>
             <div className="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur">
-              <p className="text-sm text-slate-300">Upcoming this week</p>
-              <p className="mt-2 text-3xl font-semibold">7</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-300">Upcoming Events</p>
+              <p className="mt-2 text-3xl font-semibold">{kpiData.upcomingEvents}</p>
             </div>
           </div>
         </section>
@@ -48,7 +76,7 @@ export function AuthLayout({ children, description, title }: AuthLayoutProps) {
           <div className="w-full max-w-xl space-y-6">
             <div className="space-y-3">
               <span className="inline-flex rounded-full bg-slate-100 px-3 py-1 text-sm font-medium text-slate-600">
-                Student Access
+                Portal Access
               </span>
               <div className="space-y-2">
                 <h1 className="text-3xl font-semibold tracking-tight text-slate-950">

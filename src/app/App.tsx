@@ -1,20 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LoginPage, SignupPage } from "@/pages/auth";
 import { AdminDashboardPage } from "@/pages/admin-dashboard";
 import { StudentDashboardPage } from "@/pages/student-dashboard";
-import { getStoredUser, logoutUserApi, type ApiAuthResponse } from "@/lib/api";
+import { logoutUserApi, type ApiAuthResponse } from "@/lib/api";
 
 type AppRoute = "login" | "signup" | "student-dashboard" | "admin-dashboard";
 
 export function App() {
-  const [currentUser, setCurrentUser] = useState<ApiAuthResponse | null>(() => getStoredUser());
-  const [route, setRoute] = useState<AppRoute>(() => {
-    const user = getStoredUser();
-    if (user) {
-      return user.role === "ADMIN" ? "admin-dashboard" : "student-dashboard";
-    }
-    return "login";
-  });
+  const [currentUser, setCurrentUser] = useState<ApiAuthResponse | null>(null);
+  const [route, setRoute] = useState<AppRoute>("login");
+
+  // Ensure Login Auth page is ALWAYS the initial page loaded when starting app
+  useEffect(() => {
+    logoutUserApi();
+  }, []);
 
   const handleAuthSuccess = (user: ApiAuthResponse) => {
     setCurrentUser(user);

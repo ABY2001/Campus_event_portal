@@ -7,7 +7,7 @@ export const demoLoginCredentials: LoginCredentials = {
 };
 
 export const demoSignupPayload: SignupPayload = {
-  name: "Aby Ponnachan",
+  name: "Campus Student",
   email: "student@campus.edu",
   password: "Student123!",
   confirmPassword: "Student123!",
@@ -19,7 +19,7 @@ export const demoSignupPayload: SignupPayload = {
 
 export const currentUser: AuthUser = {
   id: "student-1",
-  name: "Aby Ponnachan",
+  name: "Campus Student",
   email: "student@campus.edu",
   role: "STUDENT",
 };

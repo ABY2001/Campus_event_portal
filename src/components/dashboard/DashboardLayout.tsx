@@ -8,7 +8,7 @@ import type { Announcement, DashboardStat, StudentProfile } from "@/types/dashbo
 import type { ApiEvent, ApiRegistration } from "@/lib/api";
 
 type DashboardLayoutProps = {
-  announcements: Announcement[];
+  announcements?: Announcement[];
   categories: { id: string; label: string }[];
   selectedCategory?: string;
   onSelectCategory?: (category: string) => void;
@@ -27,7 +27,6 @@ type DashboardLayoutProps = {
 };
 
 export function DashboardLayout({
-  announcements,
   categories,
   selectedCategory = "All",
   onSelectCategory,
@@ -134,7 +133,7 @@ export function DashboardLayout({
                   )}
                 </section>
 
-                {/* Right Column: Registrations & Announcements */}
+                {/* Right Column: Registrations */}
                 <div className="space-y-6">
                   <section className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
                     <h2 className="text-2xl font-semibold text-slate-950">
@@ -156,31 +155,6 @@ export function DashboardLayout({
                           />
                         ))
                       )}
-                    </div>
-                  </section>
-
-                  <section className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-sm">
-                    <h2 className="text-2xl font-semibold text-slate-950">Campus Bulletins</h2>
-                    <div className="mt-4 space-y-3">
-                      {announcements.map((bulletin) => (
-                        <article
-                          className="rounded-2xl border border-slate-200 bg-slate-50 p-4 transition hover:bg-slate-100/60"
-                          key={bulletin.id}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-violet-700">
-                              {bulletin.badge || "Bulletin"}
-                            </span>
-                            <span className="text-xs text-slate-400">{bulletin.date}</span>
-                          </div>
-                          <h3 className="mt-2 text-base font-semibold text-slate-900">
-                            {bulletin.title}
-                          </h3>
-                          <p className="mt-1 text-xs text-slate-600">
-                            {bulletin.description}
-                          </p>
-                        </article>
-                      ))}
                     </div>
                   </section>
                 </div>

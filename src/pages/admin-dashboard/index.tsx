@@ -10,6 +10,7 @@ import {
   createCustomAdminApi,
   getSharedEvents,
   saveSharedEvents,
+  getDemoRegisteredUsers,
   type ApiDashboardKPIs,
   type ApiEvent,
   type ApiParticipant,
@@ -94,14 +95,21 @@ export function AdminDashboardPage({
       setStudentUsersCount(data.total_students);
       setAdminUsersCount(data.total_admins);
     } catch {
-      // Dynamic fallback metrics calculated from actual state
+      // Dynamic fallback metrics calculated from registered users list
+      const demoUsers = getDemoRegisteredUsers();
+      const studentCount = demoUsers.filter((u) => u.role === "STUDENT").length;
+      const adminCount = demoUsers.filter((u) => u.role === "ADMIN").length;
+      const currentEvents = getSharedEvents();
+
       setKpis({
-        total_students: studentUsersCount,
-        total_admins: adminUsersCount,
-        total_events: events.length,
-        upcoming_events: events.filter((e) => e.status === "PUBLISHED").length,
-        total_active_registrations: events.reduce((sum, e) => sum + (e.registered_count || 0), 0),
+        total_students: studentCount,
+        total_admins: adminCount,
+        total_events: currentEvents.length,
+        upcoming_events: currentEvents.filter((e) => e.status === "PUBLISHED").length,
+        total_active_registrations: currentEvents.reduce((sum, e) => sum + (e.registered_count || 0), 0),
       });
+      setStudentUsersCount(studentCount);
+      setAdminUsersCount(adminCount);
     } finally {
       setIsLoadingKpis(false);
     }

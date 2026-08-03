@@ -67,9 +67,39 @@ export type ApiRegistration = {
   event?: ApiEvent;
 };
 
+export type DemoUserRecord = {
+  email: string;
+  password?: string;
+  full_name: string;
+  role: "STUDENT" | "ADMIN";
+};
+
 export function isDemoToken(): boolean {
   const token = localStorage.getItem("campus_access_token");
   return !token || token.startsWith("demo_token");
+}
+
+export function getDemoRegisteredUsers(): DemoUserRecord[] {
+  try {
+    const data = localStorage.getItem("campus_demo_registered_users");
+    if (data) {
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+    }
+  } catch {}
+  return [
+    { email: "student@campus.edu", full_name: "Campus Student", role: "STUDENT" },
+    { email: "admin@campus.edu", full_name: "Campus Admin", role: "ADMIN" },
+  ];
+}
+
+export function saveDemoRegisteredUser(user: DemoUserRecord) {
+  try {
+    const list = getDemoRegisteredUsers();
+    const existing = list.filter((u) => u.email.toLowerCase() !== user.email.toLowerCase());
+    const updated = [user, ...existing];
+    localStorage.setItem("campus_demo_registered_users", JSON.stringify(updated));
+  } catch {}
 }
 
 export function getSharedEvents(): ApiEvent[] {
@@ -173,6 +203,12 @@ export async function createCustomAdminApi(adminData: {
   full_name: string;
 }): Promise<ApiAuthResponse> {
   if (isDemoToken()) {
+    saveDemoRegisteredUser({
+      email: adminData.email,
+      password: adminData.password,
+      full_name: adminData.full_name,
+      role: "ADMIN",
+    });
     throw new Error("Demo mode: admin account created locally.");
   }
 
@@ -191,8 +227,8 @@ export async function createCustomAdminApi(adminData: {
   });
 
   if (!response.ok) {
-    const err = await response.json().catch(() => ({ detail: "Failed to create admin account." }));
-    throw new Error(err.detail || "Failed to create admin.");
+    const errorData = await response.json().catch(() => ({ detail: "Failed to create custom admin." }));
+    throw new Error(errorData.detail || "Could not create custom admin account.");
   }
 
   return await response.json();
@@ -200,7 +236,15 @@ export async function createCustomAdminApi(adminData: {
 
 export async function getDashboardKPIsApi(): Promise<ApiDashboardKPIs> {
   if (isDemoToken()) {
-    throw new Error("Demo mode: using local KPI state.");
+    const sharedEvents = getSharedEvents();
+    const demoUsers = getDemoRegisteredUsers();
+    return {
+      total_students: demoUsers.filter((u) => u.role === "STUDENT").length,
+      total_admins: demoUsers.filter((u) => u.role === "ADMIN").length,
+      total_events: sharedEvents.length,
+      upcoming_events: sharedEvents.filter((e) => e.status === "PUBLISHED").length,
+      total_active_registrations: sharedEvents.reduce((sum, e) => sum + (e.registered_count || 0), 0),
+    };
   }
 
   const response = await fetch(`${API_BASE}/dashboard/kpis`, {
@@ -208,7 +252,15 @@ export async function getDashboardKPIsApi(): Promise<ApiDashboardKPIs> {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to fetch dashboard KPIs.");
+    const sharedEvents = getSharedEvents();
+    const demoUsers = getDemoRegisteredUsers();
+    return {
+      total_students: demoUsers.filter((u) => u.role === "STUDENT").length,
+      total_admins: demoUsers.filter((u) => u.role === "ADMIN").length,
+      total_events: sharedEvents.length,
+      upcoming_events: sharedEvents.filter((e) => e.status === "PUBLISHED").length,
+      total_active_registrations: sharedEvents.reduce((sum, e) => sum + (e.registered_count || 0), 0),
+    };
   }
 
   return await response.json();
@@ -220,35 +272,39 @@ export async function getEventsApi(params?: {
   page?: number;
   size?: number;
 }): Promise<ApiEventList> {
-  const query = new URLSearchParams();
-  if (params?.search) query.append("search", params.search);
-  if (params?.category) query.append("category", params.category);
-  if (params?.page) query.append("page", String(params.page));
-  if (params?.size) query.append("size", String(params.size));
+  if (isDemoToken()) {
+    const sharedEvents = getSharedEvents();
+    return {
+      total: sharedEvents.length,
+      page: params?.page || 1,
+      size: params?.size || 10,
+      items: sharedEvents,
+    };
+  }
 
-  const url = `${API_BASE}/events${query.toString() ? `?${query.toString()}` : ""}`;
-  const response = await fetch(url);
+  const searchParams = new URLSearchParams();
+  if (params?.search) searchParams.append("search", params.search);
+  if (params?.category && params.category !== "All") searchParams.append("category", params.category);
+  if (params?.page) searchParams.append("page", String(params.page));
+  if (params?.size) searchParams.append("size", String(params.size));
 
+  const response = await fetch(`${API_BASE}/events?${searchParams.toString()}`);
   if (!response.ok) {
-    throw new Error("Failed to fetch events list.");
+    const sharedEvents = getSharedEvents();
+    return {
+      total: sharedEvents.length,
+      page: params?.page || 1,
+      size: params?.size || 10,
+      items: sharedEvents,
+    };
   }
 
   return await response.json();
 }
 
-export async function createEventApi(eventData: {
-  title: string;
-  description: string;
-  category: string;
-  location: string;
-  start_time: string;
-  end_time: string;
-  registration_deadline: string;
-  capacity: number;
-  status?: string;
-}): Promise<ApiEvent> {
+export async function createEventApi(eventData: Partial<ApiEvent>): Promise<ApiEvent> {
   if (isDemoToken()) {
-    throw new Error("Demo mode: event saved locally.");
+    throw new Error("Demo mode: using local state.");
   }
 
   const response = await fetch(`${API_BASE}/events`, {
@@ -261,8 +317,8 @@ export async function createEventApi(eventData: {
   });
 
   if (!response.ok) {
-    const err = await response.json().catch(() => ({ detail: "Failed to create event." }));
-    throw new Error(err.detail || "Error creating event.");
+    const errorData = await response.json().catch(() => ({ detail: "Failed to create event." }));
+    throw new Error(errorData.detail || "Error creating event.");
   }
 
   return await response.json();
@@ -270,7 +326,7 @@ export async function createEventApi(eventData: {
 
 export async function updateEventApi(eventId: string, eventData: Partial<ApiEvent>): Promise<ApiEvent> {
   if (isDemoToken()) {
-    throw new Error("Demo mode: event updated locally.");
+    throw new Error("Demo mode: using local state.");
   }
 
   const response = await fetch(`${API_BASE}/events/${eventId}`, {
@@ -283,29 +339,34 @@ export async function updateEventApi(eventId: string, eventData: Partial<ApiEven
   });
 
   if (!response.ok) {
-    const err = await response.json().catch(() => ({ detail: "Failed to update event." }));
-    throw new Error(err.detail || "Error updating event.");
+    const errorData = await response.json().catch(() => ({ detail: "Failed to update event." }));
+    throw new Error(errorData.detail || "Error updating event.");
   }
 
   return await response.json();
 }
 
 export async function deleteEventApi(eventId: string): Promise<void> {
-  if (isDemoToken()) return;
+  if (isDemoToken()) {
+    return;
+  }
 
   const response = await fetch(`${API_BASE}/events/${eventId}`, {
     method: "DELETE",
-    headers: { ...getAuthHeader() },
+    headers: {
+      ...getAuthHeader(),
+    },
   });
 
   if (!response.ok) {
-    throw new Error("Failed to delete event.");
+    const errorData = await response.json().catch(() => ({ detail: "Failed to delete event." }));
+    throw new Error(errorData.detail || "Error deleting event.");
   }
 }
 
 export async function uploadEventBannerApi(eventId: string, file: File): Promise<ApiEvent> {
   if (isDemoToken()) {
-    throw new Error("Demo mode: banner uploaded locally.");
+    throw new Error("Demo mode: using local banner state.");
   }
 
   const formData = new FormData();
@@ -313,28 +374,15 @@ export async function uploadEventBannerApi(eventId: string, file: File): Promise
 
   const response = await fetch(`${API_BASE}/events/${eventId}/banner`, {
     method: "POST",
-    headers: { ...getAuthHeader() },
+    headers: {
+      ...getAuthHeader(),
+    },
     body: formData,
   });
 
   if (!response.ok) {
-    throw new Error("Failed to upload event banner.");
-  }
-
-  return await response.json();
-}
-
-export async function getEventParticipantsApi(eventId: string): Promise<ApiParticipant[]> {
-  if (isDemoToken()) {
-    throw new Error("Demo mode: using local participants.");
-  }
-
-  const response = await fetch(`${API_BASE}/registrations/events/${eventId}/participants`, {
-    headers: { ...getAuthHeader() },
-  });
-
-  if (!response.ok) {
-    throw new Error("Failed to fetch event participants.");
+    const errorData = await response.json().catch(() => ({ detail: "Failed to upload banner image." }));
+    throw new Error(errorData.detail || "Error uploading banner image.");
   }
 
   return await response.json();
@@ -342,35 +390,53 @@ export async function getEventParticipantsApi(eventId: string): Promise<ApiParti
 
 export async function registerForEventApi(eventId: string): Promise<ApiRegistration> {
   if (isDemoToken()) {
-    throw new Error("Demo mode: registered locally.");
+    throw new Error("Demo mode: using local registrations.");
   }
 
   const response = await fetch(`${API_BASE}/registrations/events/${eventId}`, {
     method: "POST",
-    headers: { ...getAuthHeader() },
+    headers: {
+      ...getAuthHeader(),
+    },
   });
 
   if (!response.ok) {
-    const err = await response.json().catch(() => ({ detail: "Failed to register for event." }));
-    throw new Error(err.detail || "Error registering for event.");
+    const errorData = await response.json().catch(() => ({ detail: "Failed to register for event." }));
+    throw new Error(errorData.detail || "Error registering for event.");
   }
 
   return await response.json();
 }
 
-export async function cancelRegistrationApi(eventId: string): Promise<ApiRegistration> {
+export async function cancelRegistrationApi(eventId: string): Promise<void> {
   if (isDemoToken()) {
-    throw new Error("Demo mode: registration cancelled locally.");
+    return;
   }
 
   const response = await fetch(`${API_BASE}/registrations/events/${eventId}`, {
     method: "DELETE",
+    headers: {
+      ...getAuthHeader(),
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: "Failed to cancel registration." }));
+    throw new Error(errorData.detail || "Error cancelling registration.");
+  }
+}
+
+export async function getEventParticipantsApi(eventId: string): Promise<ApiParticipant[]> {
+  if (isDemoToken()) {
+    return [];
+  }
+
+  const response = await fetch(`${API_BASE}/registrations/events/${eventId}/participants`, {
     headers: { ...getAuthHeader() },
   });
 
   if (!response.ok) {
-    const err = await response.json().catch(() => ({ detail: "Failed to cancel registration." }));
-    throw new Error(err.detail || "Error cancelling registration.");
+    return [];
   }
 
   return await response.json();
