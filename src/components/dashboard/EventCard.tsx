@@ -31,7 +31,7 @@ export function EventCard({
   });
 
   const bannerSrc = event.banner_url
-    ? event.banner_url.startsWith("http") || event.banner_url.startsWith("blob")
+    ? event.banner_url.startsWith("http") || event.banner_url.startsWith("blob") || event.banner_url.startsWith("data:")
       ? event.banner_url
       : `http://localhost:8000${event.banner_url}`
     : "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&auto=format&fit=crop&q=60";

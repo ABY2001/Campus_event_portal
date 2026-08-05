@@ -262,19 +262,33 @@ export function AdminDashboardPage({
 
     const bannerPreviewUrl = URL.createObjectURL(bannerFile);
 
+    const updateEventWithBanner = (finalBannerUrl: string) => {
+      setEvents((prev) => {
+        const updatedList = prev.map((ev) =>
+          ev.id === bannerUploadEvent.id ? { ...ev, banner_url: finalBannerUrl } : ev
+        );
+        saveSharedEvents(updatedList);
+        return updatedList;
+      });
+    };
+
     try {
       const updated = await uploadEventBannerApi(bannerUploadEvent.id, bannerFile);
-      setEvents((prev) => {
-        const updatedList = prev.map((ev) => (ev.id === bannerUploadEvent.id ? { ...ev, banner_url: updated.banner_url || bannerPreviewUrl } : ev));
-        saveSharedEvents(updatedList);
-        return updatedList;
-      });
+      if (updated.banner_url) {
+        updateEventWithBanner(updated.banner_url);
+      } else {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          updateEventWithBanner((reader.result as string) || bannerPreviewUrl);
+        };
+        reader.readAsDataURL(bannerFile);
+      }
     } catch {
-      setEvents((prev) => {
-        const updatedList = prev.map((ev) => (ev.id === bannerUploadEvent.id ? { ...ev, banner_url: bannerPreviewUrl } : ev));
-        saveSharedEvents(updatedList);
-        return updatedList;
-      });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        updateEventWithBanner((reader.result as string) || bannerPreviewUrl);
+      };
+      reader.readAsDataURL(bannerFile);
     }
 
     setFeedbackMsg(`Banner uploaded for event "${bannerUploadEvent.title}"!`);
@@ -589,7 +603,7 @@ export function AdminDashboardPage({
                           <div className="mt-4 h-36 w-full overflow-hidden rounded-2xl bg-slate-200">
                             <img
                               src={
-                                ev.banner_url.startsWith("http") || ev.banner_url.startsWith("blob")
+                                ev.banner_url.startsWith("http") || ev.banner_url.startsWith("blob") || ev.banner_url.startsWith("data:")
                                   ? ev.banner_url
                                   : `http://localhost:8000${ev.banner_url}`
                               }
