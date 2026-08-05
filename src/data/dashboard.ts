@@ -31,6 +31,7 @@ export const categoryFilters: CategoryFilter[] = [
   { id: "cultural", label: "Cultural" },
   { id: "sports", label: "Sports" },
   { id: "seminar", label: "Seminar" },
+  { id: "academic", label: "Academic" },
   { id: "hackathon", label: "Hackathon" },
 ];
 

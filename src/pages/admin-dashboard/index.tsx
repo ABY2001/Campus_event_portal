@@ -698,6 +698,7 @@ export function AdminDashboardPage({
                     <option value="Sports">Sports</option>
                     <option value="Seminar">Seminar</option>
                     <option value="Academic">Academic</option>
+                    <option value="Hackathon">Hackathon</option>
                   </select>
                 </div>
 
